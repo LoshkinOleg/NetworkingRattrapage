@@ -1,9 +1,7 @@
 ﻿using System.Collections.Generic;
-using UnityEngine;
 using Bolt;
-using Bolt.Matchmaking;
 
-[BoltGlobalBehaviour]
+[BoltGlobalBehaviour(BoltNetworkModes.Server)]
 class GameManager : GlobalEventListener
 {
     Dictionary<BoltConnection, BoltEntity> clientPlayers = new Dictionary<BoltConnection, BoltEntity>();
@@ -11,33 +9,23 @@ class GameManager : GlobalEventListener
 
     public override void BoltStartDone()
     {
-        if (BoltNetwork.IsServer)
-        {
-            serverPlayer = BoltNetwork.Instantiate(BoltPrefabs.Player);
-            serverPlayer.TakeControl();
-        }
+        // Instanciate a player prefab for the listen server.
+        serverPlayer = BoltNetwork.Instantiate(BoltPrefabs.Player);
+        serverPlayer.TakeControl();
     }
 
     public override void Connected(BoltConnection connection)
     {
-        base.Connected(connection);
-
-        if (BoltNetwork.IsServer)
-        {
-            clientPlayers.Add(connection, BoltNetwork.Instantiate(BoltPrefabs.Player));
-            clientPlayers[connection].AssignControl(connection);
-        }
+        // Instanciate player prefabs for new clients.
+        clientPlayers.Add(connection, BoltNetwork.Instantiate(BoltPrefabs.Player));
+        clientPlayers[connection].AssignControl(connection);
     }
 
     public override void Disconnected(BoltConnection connection)
     {
-        base.Disconnected(connection);
-
-        if (BoltNetwork.IsServer)
-        {
-            clientPlayers[connection].ReleaseControl();
-            clientPlayers[connection].DestroyDelayed(0.0f);
-            clientPlayers.Remove(connection);
-        }
+        // Clean up after disconnected player.
+        clientPlayers[connection].ReleaseControl();
+        clientPlayers[connection].DestroyDelayed(0.0f);
+        clientPlayers.Remove(connection);
     }
 }

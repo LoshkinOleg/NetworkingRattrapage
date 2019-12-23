@@ -1,57 +1,70 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using Bolt;
 
 public class PlayerController : EntityBehaviour<IPlayerState>
 {
+    // Player values.
+    [SerializeField] [Range(0.0f, float.MaxValue)] float movementSpeed = 10;
+    [SerializeField] [Range(0.0f, float.MaxValue)] float mouseSensitivity = 2;
+    [SerializeField] [Range(0.0f, 180.0f)] float fieldOfView = 90.0f;
+
+    // Player camera to instanciate.
+    [SerializeField] GameObject cameraPrefab = null;
+
+    // Inputs.
     Vector3 movementInput = Vector3.zero;
     Vector2 mouseInput = Vector2.zero;
 
+    // Bolt inherited.
     public override void Attached()
     {
-        base.Attached();
-
+        // Sync the transforms.
         state.SetTransforms(state.StateTransform, transform);
     }
-
+    public override void ControlGained()
+    {
+        // Instanciate a camera for the player.
+        var cameraTransform = Instantiate(cameraPrefab).transform;
+        cameraTransform.SetPositionAndRotation(transform.position, transform.rotation);
+        cameraTransform.SetParent(transform);
+        cameraTransform.gameObject.GetComponent<Camera>().fieldOfView = fieldOfView;
+    }
     public override void SimulateController()
     {
-        base.SimulateController();
-
-
+        // Issue movement command.
         IMovementCommandInput cmd = MovementCommand.Create();
         cmd.Movement = movementInput;
         cmd.Mouse = mouseInput;
         entity.QueueInput(cmd);
     }
-
     public override void ExecuteCommand(Command command, bool resetState)
     {
-        base.ExecuteCommand(command, resetState);
-
         MovementCommand cmd = command as MovementCommand;
 
-        if (resetState) // Controller only.
+        // Process command.
+        if (resetState) // Ran on controller only.
         {
+            // Reset state to last acknowledged one.
             transform.position = cmd.Result.Position;
             transform.rotation = cmd.Result.Rotation;
         }
-        else // Controller and owner.
+        else // ran on controller and owner.
         {
+            // Move.
             transform.position = transform.position + cmd.Input.Movement * BoltNetwork.FrameDeltaTime;
             cmd.Result.Position = transform.position;
 
-            transform.rotation *= Quaternion.Euler(cmd.Input.Mouse.y, cmd.Input.Mouse.x, 0);
+            // Rotate.
+            transform.rotation *= Quaternion.Euler(0, cmd.Input.Mouse.x, 0);
             cmd.Result.Rotation = transform.rotation;
         }
     }
 
-    private void Update()
+    // Monobehaviour inherited.
+    void Update()
     {
-        movementInput.x = Input.GetAxisRaw("Horizontal");
-        movementInput.z = Input.GetAxisRaw("Vertical");
-        mouseInput.x = Input.GetAxisRaw("Mouse X");
-        mouseInput.y = Input.GetAxisRaw("Mouse Y");
+        // Update inputs.
+        movementInput = (transform.right * Input.GetAxisRaw("Horizontal") + transform.forward * Input.GetAxisRaw("Vertical")).normalized * movementSpeed;
+        mouseInput.x = Input.GetAxisRaw("Mouse X") * mouseSensitivity;
     }
 }
