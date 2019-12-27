@@ -10,31 +10,28 @@ public class PlayerController : EntityBehaviour<IPlayerState>
         public bool up;
         public bool right;
         public bool down;
-    }
-    struct State
-    {
-        public Vector3 position;
-        public Quaternion rotation;
+        public bool firing;
     }
 
     // Player values.
-    [SerializeField] [Range(0.0f, float.MaxValue)] float acceleration = 5.0f;
-    [SerializeField] [Range(0.0f, float.MaxValue)] float maxSpeed = 10.0f;
+    [SerializeField] [Range(0.0f, float.MaxValue)] float movementSpeed = 5.0f;
     [SerializeField] [Range(0.0f, float.MaxValue)] float mouseSensitivity = 2.0f;
     [SerializeField] [Range(0.0f, 180.0f)] float fieldOfView = 90.0f;
 
     // Player camera to instanciate.
     [SerializeField] GameObject cameraPrefab = null;
 
+    // Components.
+    [SerializeField] CharacterController charaController = null;
+
     // Network related.
     Input input;
-    State playerState;
 
     // Bolt inherited.
     public override void Attached()
     {
         // Sync the transforms.
-        state.SetTransforms(state.StateTransform, transform);
+        state.SetTransforms(state.StateTransform, entity.transform);
     }
     public override void ControlGained()
     {
@@ -44,29 +41,40 @@ public class PlayerController : EntityBehaviour<IPlayerState>
         cameraTransform.SetParent(transform);
         cameraTransform.gameObject.GetComponent<Camera>().fieldOfView = fieldOfView;
 
-        playerState.position = transform.position;
-        playerState.rotation = transform.rotation;
+        entity.transform.position = transform.position;
+        entity.transform.rotation = transform.rotation;
     }
     public override void SimulateController()
     {
-        input.mouseX = UnityEngine.Input.GetAxisRaw("Mouse X");
+        // Queue inputs.
+        var horizontal  = UnityEngine.Input.GetAxisRaw("Horizontal");
+        var vertical    = UnityEngine.Input.GetAxisRaw("Vertical");
 
-        var horizontal = UnityEngine.Input.GetAxisRaw("Horizontal");
-        var vertical = UnityEngine.Input.GetAxisRaw("Vertical");
-        input.left = horizontal < 0.0f;
-        input.up = vertical > 0.0f;
-        input.right = horizontal > 0.0f;
-        input.down = vertical < 0.0f;
+        input.mouseX    = UnityEngine.Input.GetAxisRaw("Mouse X");
+        input.left      = horizontal < 0.0f;
+        input.up        = vertical > 0.0f;
+        input.right     = horizontal > 0.0f;
+        input.down      = vertical < 0.0f;
+        input.firing    = UnityEngine.Input.GetButtonDown("Fire1");
 
         var cmd = MovementCommand.Create();
-        cmd.MouseX = input.mouseX;
-        cmd.Left = input.left;
-        cmd.Up = input.up;
-        cmd.Right = input.right;
-        cmd.Down = input.down;
+        cmd.MouseX  = input.mouseX;
+        cmd.Left    = input.left;
+        cmd.Up      = input.up;
+        cmd.Right   = input.right;
+        cmd.Down    = input.down;
         entity.QueueInput(cmd);
-    }
 
+        if (UnityEngine.Input.GetKeyDown(KeyCode.M))
+        {
+            BoltLog.Info("Sessions count: " + BoltNetwork.SessionList.Count);
+            foreach (var item in BoltNetwork.SessionList)
+            {
+                BoltLog.Info(item.Value.HostName);
+            }
+        }
+    }
+    
     public override void ExecuteCommand(Command command, bool resetState)
     {
         MovementCommand cmd = command as MovementCommand;
@@ -74,34 +82,40 @@ public class PlayerController : EntityBehaviour<IPlayerState>
         // Process command.
         if (resetState) // Ran on controller only.
         {
-            transform.position = cmd.Result.Position;
-            transform.rotation = cmd.Result.Rotation;
-            playerState.position = cmd.Result.Position;
-            playerState.rotation = cmd.Result.Rotation;
+            entity.transform.position = cmd.Result.Position;
+            entity.transform.rotation = cmd.Result.Rotation;
         }
-        else // ran on controller and owner.
+        else // Ran on controller and owner (same host in this game's case).
         {
+            var playerTransform = entity.transform;
+
             // Move.
             var newMovement = Vector3.zero;
-            if (input.left) newMovement -= transform.right;
-            if (input.up) newMovement += transform.forward;
-            if (input.right) newMovement += transform.right;
-            if (input.down) newMovement -= transform.forward;
+            if (input.left) newMovement     -= playerTransform.right;
+            if (input.up) newMovement       += playerTransform.forward;
+            if (input.right) newMovement    += playerTransform.right;
+            if (input.down) newMovement     -= playerTransform.forward;
             newMovement.Normalize();
 
-            newMovement *= acceleration * BoltNetwork.FrameDeltaTime;
-            newMovement = Vector3.ClampMagnitude(newMovement, maxSpeed);
-
-            playerState.position += newMovement;
+            charaController.Move(newMovement * movementSpeed * BoltNetwork.FrameDeltaTime);
+            cmd.Result.Position = playerTransform.position;
 
             // Rotate.
-            playerState.rotation *= Quaternion.Euler(new Vector3(0, input.mouseX, 0) * mouseSensitivity);
+            entity.transform.rotation *= Quaternion.Euler(0,input.mouseX * mouseSensitivity, 0);
+            cmd.Result.Rotation = playerTransform.rotation;
 
-            // Apply movement and rotation.
-            cmd.Result.Position = playerState.position;
-            cmd.Result.Rotation = playerState.rotation;
-            transform.position = playerState.position;
-            transform.rotation = playerState.rotation;
+            // Shoot.
+            if (cmd.IsFirstExecution)
+            {
+                if (input.firing)
+                {
+                    var hits = BoltNetwork.RaycastAll(new Ray(entity.transform.position, entity.transform.forward), cmd.ServerFrame);
+                    if (hits.count > 0)
+                    {
+                        BoltLog.Info("Hit something");
+                    }
+                }
+            }
         }
     }
 }

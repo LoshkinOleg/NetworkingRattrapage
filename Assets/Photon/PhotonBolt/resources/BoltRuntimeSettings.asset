@@ -51,20 +51,20 @@ MonoBehaviour:
   showDebugInfo: 0
   overrideTimeScale: 1
   logUncaughtExceptions: 1
-  debugEditorMode: 1
+  debugEditorMode: 0
   consoleToggleKey: 9
   consoleVisibleByDefault: 1
   compilationWarnLevel: 4
   editorSkin: 4
   scopeModeHideWarningInGui: 0
-  showHelpButtons: 1
+  showHelpButtons: 0
   masterServerGameId: 09A20926-601A-4EF4-BFEE-374761B0D2A5
-  showBoltEntityHints: 1
+  showBoltEntityHints: 0
   serializeProjectAsText: 0
   photonAppId: 3683c07f-5a76-40c3-8a35-48bd468ae8d9
   photonUsePunch: 0
   photonCloudRegionIndex: 0
-  instantiateMode: 1
+  instantiateMode: 0
   globalEntityBehaviourQueryOption: 3
   globalEntityPriorityCalculatorQueryOption: 3
   globalEntityReplicationFilterQueryOption: 3
