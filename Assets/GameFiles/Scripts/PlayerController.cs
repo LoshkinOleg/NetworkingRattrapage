@@ -57,7 +57,7 @@ public class PlayerController : EntityBehaviour<IPlayerState>
         input.down      = vertical < 0.0f;
         input.firing    = UnityEngine.Input.GetButtonDown("Fire1");
 
-        var cmd = MovementCommand.Create();
+        var cmd = MoveCommand.Create();
         cmd.MouseX  = input.mouseX;
         cmd.Left    = input.left;
         cmd.Up      = input.up;
@@ -77,7 +77,7 @@ public class PlayerController : EntityBehaviour<IPlayerState>
     
     public override void ExecuteCommand(Command command, bool resetState)
     {
-        MovementCommand cmd = command as MovementCommand;
+        MoveCommand cmd = command as MoveCommand;
 
         // Process command.
         if (resetState) // Ran on controller only.

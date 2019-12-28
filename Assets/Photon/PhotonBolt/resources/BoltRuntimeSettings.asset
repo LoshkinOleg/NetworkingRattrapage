@@ -19,7 +19,7 @@ MonoBehaviour:
     maxEntityPriority: 65536
     maxPropertyPriority: 2048
     scopeMode: 0
-    logTargets: 2
+    logTargets: 3
     disableDejitterBuffer: 0
     clientSendRate: 2
     clientDejitterDelay: 6
@@ -34,7 +34,7 @@ MonoBehaviour:
     commandQueueSize: 60
     commandRedundancy: 6
     commandPingMultiplier: 1.25
-    useNetworkSimulation: 1
+    useNetworkSimulation: 0
     simulatedLoss: 0.02
     simulatedPingMean: 200
     simulatedPingJitter: 10
@@ -47,23 +47,23 @@ MonoBehaviour:
   debugClientCount: 2
   debugStartPort: 50538
   debugStartMapName: Main
-  debugPlayAsServer: 0
-  showDebugInfo: 0
+  debugPlayAsServer: 1
+  showDebugInfo: 1
   overrideTimeScale: 1
-  logUncaughtExceptions: 1
-  debugEditorMode: 0
+  logUncaughtExceptions: 0
+  debugEditorMode: 1
   consoleToggleKey: 9
   consoleVisibleByDefault: 1
   compilationWarnLevel: 4
   editorSkin: 4
   scopeModeHideWarningInGui: 0
-  showHelpButtons: 0
+  showHelpButtons: 1
   masterServerGameId: 09A20926-601A-4EF4-BFEE-374761B0D2A5
   showBoltEntityHints: 0
   serializeProjectAsText: 0
   photonAppId: 3683c07f-5a76-40c3-8a35-48bd468ae8d9
   photonUsePunch: 0
-  photonCloudRegionIndex: 0
+  photonCloudRegionIndex: 5
   instantiateMode: 0
   globalEntityBehaviourQueryOption: 3
   globalEntityPriorityCalculatorQueryOption: 3

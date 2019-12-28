@@ -155,16 +155,7 @@
         }
       },
       "Name": "PlayerState",
-      "Guid": "e3bff237-a0c8-4def-98b6-aa0f2f48cd30",
-      "Groups": []
-    },
-    {
-      "$type": "Bolt.Compiler.EventDefinition, bolt.compiler",
-      "Properties": [],
-      "EntitySenders": 2,
-      "GlobalSenders": 3,
-      "Name": "ShotEvent",
-      "Guid": "c034d846-1726-4e32-8224-bfe5867e0119",
+      "Guid": "338346a0-e559-452a-baca-691717671be2",
       "Groups": []
     },
     {
@@ -337,8 +328,16 @@
         }
       ],
       "Properties": [],
-      "Name": "MovementCommand",
-      "Guid": "cd33db1d-e477-49b6-89fa-c95f7745fa0e",
+      "Name": "MoveCommand",
+      "Guid": "3af09319-7ebe-4200-b177-2557d6d1b26b",
+      "Groups": []
+    },
+    {
+      "$type": "Bolt.Compiler.EventDefinition, bolt.compiler",
+      "Properties": [],
+      "EntitySenders": 2,
+      "Name": "ShotEvent",
+      "Guid": "c3f9f098-d189-4846-b972-1b065e8eb427",
       "Groups": []
     }
   ],
