@@ -64,15 +64,6 @@ public class PlayerController : EntityBehaviour<IPlayerState>
         cmd.Right   = input.right;
         cmd.Down    = input.down;
         entity.QueueInput(cmd);
-
-        if (UnityEngine.Input.GetKeyDown(KeyCode.M))
-        {
-            BoltLog.Info("Sessions count: " + BoltNetwork.SessionList.Count);
-            foreach (var item in BoltNetwork.SessionList)
-            {
-                BoltLog.Info(item.Value.HostName);
-            }
-        }
     }
     
     public override void ExecuteCommand(Command command, bool resetState)

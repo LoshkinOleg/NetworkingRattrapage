@@ -1,63 +1,87 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using Bolt;
 using Bolt.Matchmaking;
-using System;
-using UdpKit;
 
-[BoltGlobalBehaviour]
-public class NetworkCallbacks : GlobalEventListener
+class Menu : GlobalEventListener
 {
-    BoltEntity player = null;
-
-    public override void SceneLoadLocalDone(string scene)
+    enum Tab
     {
-        if (scene == "Main")
+        MAIN,
+        SESSION_CREATION
+    }
+
+    // GUI fields.
+    Tab currentTab = Tab.MAIN;
+    string hostName = "";
+
+    int screenWidth = 0;
+    int screenHeight = 0;
+    Vector2 screenCenter = Vector2.zero;
+    const int WIDGET_WIDTH = 400;
+    const int WIDGET_HEIGHT = 100;
+    const int BUTTON_WIDTH = 200;
+    const int BUTTON_HEIGHT = 50;
+
+    // Monobehaviour inherited.
+    private void Start()
+    {
+        screenWidth = Screen.width;
+        screenHeight = Screen.height;
+        screenCenter = new Vector2(screenWidth * 0.5f, screenHeight * 0.5f);
+    }
+    void OnGUI()
+    {
+        switch (currentTab)
         {
-            player = BoltNetwork.Instantiate(BoltPrefabs.Player);
-            player.TakeControl();
+            case Tab.MAIN:
+                {
+                    GUILayout.BeginHorizontal("Box");
+                    {
+                        if (GUI.Button(new Rect(screenCenter.x - BUTTON_WIDTH * 0.5f, screenCenter.y * 0.33f, BUTTON_WIDTH, BUTTON_HEIGHT), "Create New Session"))
+                        {
+                            currentTab = Tab.SESSION_CREATION;
+                        }
+                        if (GUI.Button(new Rect(screenCenter.x - BUTTON_WIDTH * 0.5f, screenCenter.y * 0.66f, BUTTON_WIDTH, BUTTON_HEIGHT), "Join Random"))
+                        {
+                            BoltLauncher.StartClient();
+                        }
+                    }
+                    GUILayout.EndHorizontal();
+                }
+                break;
+            case Tab.SESSION_CREATION:
+                {
+                    GUILayout.BeginVertical("Box");
+                    {
+                        GUI.Label(new Rect(screenCenter.x - WIDGET_WIDTH * 0.5f, screenCenter.y * 0.33f - WIDGET_HEIGHT * 0.5f, WIDGET_WIDTH, WIDGET_HEIGHT), "Session Name:");
+                        hostName = GUI.TextField(new Rect(screenCenter.x - WIDGET_WIDTH * 0.5f, screenCenter.y * 0.33f + WIDGET_HEIGHT * 0.5f, WIDGET_WIDTH, WIDGET_HEIGHT), hostName);
+                    }
+                    GUILayout.EndVertical();
+
+                    if (GUI.Button(new Rect(screenCenter.x - BUTTON_WIDTH * 0.5f, screenCenter.y * 1.33f, BUTTON_WIDTH, BUTTON_HEIGHT), "Create"))
+                    {
+                        BoltLauncher.StartServer();
+                    }
+                }
+                break;
         }
     }
 
-    public override void SessionListUpdated(Map<Guid, UdpSession> sessionList)
-    {
-        BoltLog.Info(sessionList.Count);
-    }
-
-    public override void SessionCreated(UdpSession session)
-    {
-        BoltLog.Info("Session created");
-    }
-    public override void SessionCreationFailed(UdpSession session)
-    {
-        BoltLog.Info("Creation failed");
-    }
-}
-
-public class Menu : GlobalEventListener
-{
-    private void OnGUI()
-    {
-        if (GUILayout.Button("Join"))
-        {
-            BoltLauncher.StartClient();
-        }
-        if (GUILayout.Button("Create"))
-        {
-            BoltLauncher.StartServer();
-        }
-    }
-
+    // Bolt inherited.
     public override void BoltStartDone()
     {
         if (BoltNetwork.IsServer)
         {
-            BoltMatchmaking.CreateSession("test", null, "Main");
+            BoltMatchmaking.CreateSession(hostName, null, "Main");
         }
         else
         {
             BoltMatchmaking.JoinRandomSession();
         }
+    }
+
+    public override void BoltStartFailed()
+    {
+        Debug.LogError("Bolt start failed!");
     }
 }
