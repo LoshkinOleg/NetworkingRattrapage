@@ -9,7 +9,7 @@ class GlobalNetworkCallbacks : GlobalEventListener
     {
         if (scene == "Main")
         {
-            player = BoltNetwork.Instantiate(BoltPrefabs.Player);
+            player = BoltNetwork.Instantiate(BoltPrefabs.Player, UnityEngine.Vector3.up, UnityEngine.Quaternion.identity);
             player.TakeControl();
         }
     }
