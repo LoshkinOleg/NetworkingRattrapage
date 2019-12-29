@@ -94,9 +94,10 @@ GameObject:
   - component: {fileID: 114916494443049758}
   - component: {fileID: 5442263616026810515}
   - component: {fileID: 2144257031127954310}
+  - component: {fileID: 3845747246588665567}
   m_Layer: 0
   m_Name: Player
-  m_TagString: Untagged
+  m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -177,7 +178,6 @@ MonoBehaviour:
   mouseSensitivity: 2
   fieldOfView: 90
   shotCooldown: 2
-  defaultHealth: 3
   cameraPrefab: {fileID: 2320011434770162737, guid: e2bf9a3efaec9d940abfc2386cc1b283,
     type: 3}
   hurt: {fileID: 8300000, guid: 48e5ec869f92efa498bda2053f311ced, type: 3}
@@ -362,3 +362,16 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+--- !u!65 &3845747246588665567
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6882407831453389858}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Size: {x: 1, y: 1, z: 1}
+  m_Center: {x: 0, y: 0, z: 0}

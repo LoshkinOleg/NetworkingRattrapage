@@ -50,7 +50,7 @@ public class PlayerController : EntityEventListener<IPlayerState>
             if (_health > value) // Damaging the player.
             {
                 // Play hurt sound.
-                if (isLocalPlayer)
+                if (entity.HasControl)
                 {
                     audioSource.PlayOneShot(hurt, 1.0f);
                 }
@@ -91,6 +91,8 @@ public class PlayerController : EntityEventListener<IPlayerState>
     const int DEFAULT_HEALTH = 3;
     float reloadingTimer = 0;
     int _health = 0;
+    int killCount = 0;
+    int deathCount = 0;
     #endregion
 
     #region Inherited
@@ -106,8 +108,7 @@ public class PlayerController : EntityEventListener<IPlayerState>
     {
         if (entity.HasControl)
         {
-            // Display kill to death ratio.
-            GUILayout.Label(Health.ToString());
+            GUILayout.Label("Kills: " + killCount.ToString() + " / Deaths: " + deathCount.ToString());
         }
     }
     private void Update()
@@ -132,10 +133,6 @@ public class PlayerController : EntityEventListener<IPlayerState>
     {
         SetupCamera();
         isLocalPlayer = true;
-    }
-    public override void OnEvent(DamagePlayer evnt)
-    {
-        gameManager.BroadcastDamagePlayerEvent(evnt.Target.NetworkId);
     }
     public override void SimulateController()
     {
@@ -178,6 +175,7 @@ public class PlayerController : EntityEventListener<IPlayerState>
                 {
                     // Note: it is executed once at the start of frame, meaning upon respawning, the rollback will apply previous inputs?
                     Health = DEFAULT_HEALTH;
+                    deathCount++;
                     SetTransformValues(gameManager.FindRespawnPosition(this), Quaternion.identity);
                     cmd.Result.Position = transform.position;
                 }
@@ -198,15 +196,7 @@ public class PlayerController : EntityEventListener<IPlayerState>
     #endregion
 
     // Public methods.
-    public void DmgPlayer(NetworkId target)
-    {
-        audioSource.PlayOneShot(shot, 0.5f);
-
-        if (entity.NetworkId == target)
-        {
-            Health--;
-        }
-    }
+    // TODO: Get GM to relay event
 
     // Private methods.
     void UpdateInputs()
@@ -259,27 +249,31 @@ public class PlayerController : EntityEventListener<IPlayerState>
 
         if (input.firing && reloadingTimer < 0)
         {
+            // Instanciate ray visual.
+            BoltNetwork.Instantiate(BoltPrefabs.Ray, transform.position, transform.rotation);
+
             // Start reloading sound timer.
             playingReloadSound = false;
-
-            // Draw ray.
-            BoltNetwork.Instantiate(BoltPrefabs.Ray, transform.position, transform.rotation);
 
             // Reset shooting cooldown.
             reloadingTimer = shotCooldown;
 
             // Perform raycast and dispatch DamagePlayer event.
-
-            // BUG: raycast locally first to check against pillars.
-            // TODO
-
-            using (var hits = BoltNetwork.RaycastAll(new Ray(entity.transform.position + entity.transform.forward, entity.transform.forward), serverFrame))
+            RaycastHit hit;
+            if (Physics.Raycast(new Ray(entity.transform.position + entity.transform.forward, entity.transform.forward), out hit, 100))
             {
-                if (hits.count > 0)
+                if (hit.transform.tag == "Player")
                 {
-                    DamagePlayer damageEvnt = DamagePlayer.Create(entity, EntityTargets.Everyone);
-                    damageEvnt.Target = hits.GetHit(0).body.GetComponent<BoltEntity>();
-                    damageEvnt.Send();
+                    using (var hits = BoltNetwork.RaycastAll(new Ray(entity.transform.position + entity.transform.forward, entity.transform.forward), serverFrame))
+                    {
+                        if (hits.count > 0)
+                        {
+                            DamagePlayer damageEvnt = DamagePlayer.Create(GlobalTargets.Everyone);
+                            damageEvnt.Target = hits.GetHit(0).body.GetComponent<BoltEntity>();
+                            damageEvnt.Sender = entity;
+                            damageEvnt.Send();
+                        }
+                    }
                 }
             }
         }

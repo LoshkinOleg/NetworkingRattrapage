@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using Bolt;
 
-public class GameManager : MonoBehaviour
+public class GameManager : GlobalEventListener
 {
     // Private fields.
     List<PlayerController> players = new List<PlayerController>();
@@ -55,11 +55,37 @@ public class GameManager : MonoBehaviour
         // And return it.
         return pairs[pairs.Count - 1].Key.transform.position;
     }
-    public void BroadcastDamagePlayerEvent(NetworkId target)
+
+    public override void SceneLoadLocalDone(string scene)
     {
-        foreach (var player in players)
+        if (scene == "Main")
         {
-            player.DmgPlayer(target);
+            BoltNetwork.Instantiate(BoltPrefabs.Player, Vector3.up, Quaternion.identity).TakeControl();
+        }
+    }
+
+    public override void OnEvent(DamagePlayer evnt)
+    {
+        if (entity == evnt.Target)
+        {
+            BoltLog.Info("Me: " + entity + "; target: " + evnt.Target);
+
+            if (--Health < 1)
+            {
+                var incrementKillCountEvnt = IncrementKillCount.Create(GlobalTargets.Everyone);
+                incrementKillCountEvnt.Killer = evnt.Sender;
+                incrementKillCountEvnt.Send();
+            }
+        }
+        else
+        {
+        }
+    }
+    public override void OnEvent(IncrementKillCount evnt)
+    {
+        if (evnt.Killer == entity)
+        {
+            killCount++;
         }
     }
 }
