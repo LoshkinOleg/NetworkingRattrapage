@@ -181,7 +181,6 @@ MonoBehaviour:
   cameraPrefab: {fileID: 2320011434770162737, guid: e2bf9a3efaec9d940abfc2386cc1b283,
     type: 3}
   hurt: {fileID: 8300000, guid: 48e5ec869f92efa498bda2053f311ced, type: 3}
-  shot: {fileID: 8300000, guid: 44fcbf2ad16d9df4a9c804adc65e3dee, type: 3}
   reloadDone: {fileID: 8300000, guid: 0d746ee9139760e48a9a78db4e6a9c44, type: 3}
   ding: {fileID: 8300000, guid: ed4d069cc83610e4289f4339c03f5a3b, type: 3}
   charaController: {fileID: 143654561801841840}

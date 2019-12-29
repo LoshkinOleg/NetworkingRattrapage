@@ -26,7 +26,6 @@ public class PlayerController : EntityEventListener<IPlayerState>
 
     // Sounds.
     [SerializeField] AudioClip hurt = null;
-    [SerializeField] AudioClip shot = null;
     [SerializeField] AudioClip reloadDone = null;
     [SerializeField] AudioClip ding = null;
     float reloadSoundDuration = 0;
@@ -50,7 +49,7 @@ public class PlayerController : EntityEventListener<IPlayerState>
             if (_health > value) // Damaging the player.
             {
                 // Play hurt sound.
-                if (entity.HasControl)
+                if (isLocalPlayer)
                 {
                     audioSource.PlayOneShot(hurt, 1.0f);
                 }
@@ -91,8 +90,6 @@ public class PlayerController : EntityEventListener<IPlayerState>
     const int DEFAULT_HEALTH = 3;
     float reloadingTimer = 0;
     int _health = 0;
-    int killCount = 0;
-    int deathCount = 0;
     #endregion
 
     #region Inherited
@@ -103,13 +100,6 @@ public class PlayerController : EntityEventListener<IPlayerState>
         gameManager = GameManager.GetGM();
         gameManager.RegisterPlayer(this);
         reloadSoundDuration = reloadDone.length;
-    }
-    private void OnGUI()
-    {
-        if (entity.HasControl)
-        {
-            GUILayout.Label("Kills: " + killCount.ToString() + " / Deaths: " + deathCount.ToString());
-        }
     }
     private void Update()
     {
@@ -175,7 +165,6 @@ public class PlayerController : EntityEventListener<IPlayerState>
                 {
                     // Note: it is executed once at the start of frame, meaning upon respawning, the rollback will apply previous inputs?
                     Health = DEFAULT_HEALTH;
-                    deathCount++;
                     SetTransformValues(gameManager.FindRespawnPosition(this), Quaternion.identity);
                     cmd.Result.Position = transform.position;
                 }
@@ -196,7 +185,13 @@ public class PlayerController : EntityEventListener<IPlayerState>
     #endregion
 
     // Public methods.
-    // TODO: Get GM to relay event
+    public void ApplyDamage(DamagePlayer evnt)
+    {
+        if (entity == evnt.Target)
+        {
+            --Health;
+        }
+    }
 
     // Private methods.
     void UpdateInputs()

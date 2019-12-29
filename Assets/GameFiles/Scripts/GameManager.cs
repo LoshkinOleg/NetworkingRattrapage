@@ -66,26 +66,9 @@ public class GameManager : GlobalEventListener
 
     public override void OnEvent(DamagePlayer evnt)
     {
-        if (entity == evnt.Target)
+        foreach (var item in players)
         {
-            BoltLog.Info("Me: " + entity + "; target: " + evnt.Target);
-
-            if (--Health < 1)
-            {
-                var incrementKillCountEvnt = IncrementKillCount.Create(GlobalTargets.Everyone);
-                incrementKillCountEvnt.Killer = evnt.Sender;
-                incrementKillCountEvnt.Send();
-            }
-        }
-        else
-        {
-        }
-    }
-    public override void OnEvent(IncrementKillCount evnt)
-    {
-        if (evnt.Killer == entity)
-        {
-            killCount++;
+            item.ApplyDamage(evnt);
         }
     }
 }
