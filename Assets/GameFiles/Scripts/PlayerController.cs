@@ -1,7 +1,6 @@
 ﻿using UnityEngine;
+using UnityEngine.UI;
 using Bolt;
-using Bolt.LagCompensation;
-using TMPro;
 
 public class PlayerController : EntityEventListener<IPlayerState>
 {
@@ -16,56 +15,109 @@ public class PlayerController : EntityEventListener<IPlayerState>
         public bool firing;
     }
 
-    // Public properties.
-    public int Health => health;
-    public bool IsAlive
-    {
-        get
-        {
-            return health > 0;
-        }
-    }
-    public int PlayerId { get; set; }
-
     // Player values.
     [SerializeField] [Range(0.0f, float.MaxValue)] float movementSpeed = 5.0f;
     [SerializeField] [Range(0.0f, float.MaxValue)] float mouseSensitivity = 2.0f;
     [SerializeField] [Range(0.0f, 180.0f)] float fieldOfView = 90.0f;
     [SerializeField] [Range(0.0f, float.MaxValue)] float shotCooldown = 2.0f;
-    [SerializeField] [Range(1, System.Int16.MaxValue)] int defaultHealth = 3;
 
     // Player camera to instanciate.
     [SerializeField] GameObject cameraPrefab = null;
 
+    // Sounds.
+    [SerializeField] AudioClip hurt = null;
+    [SerializeField] AudioClip shot = null;
+    [SerializeField] AudioClip reloadDone = null;
+    [SerializeField] AudioClip ding = null;
+    float reloadSoundDuration = 0;
+    bool playingReloadSound = false;
+    bool isLocalPlayer = false;
+
     // Components.
     [SerializeField] CharacterController charaController = null;
+    [SerializeField] AudioSource audioSource = null;
+    RawImage screenOverlay = null;
+
+    // Private properties.
+    int Health
+    {
+        get
+        {
+            return _health;
+        }
+        set
+        {
+            if (_health > value) // Damaging the player.
+            {
+                // Play hurt sound.
+                if (isLocalPlayer)
+                {
+                    audioSource.PlayOneShot(hurt, 1.0f);
+                }
+                else
+                {
+                    audioSource.PlayOneShot(ding, 1.0f);
+                }
+
+                // Highlight screen in appropriate color.
+                if (isLocalPlayer)
+                {
+                    if (value == 2)
+                    {
+                        screenOverlay.color = Color.yellow;
+                    }
+                    else if (value == 1)
+                    {
+                        screenOverlay.color = Color.red;
+                    }
+                }
+            }
+            else if (isLocalPlayer)
+            {
+                if (value == 3)
+                {
+                    screenOverlay.color = Color.clear;
+                }
+            }
+            _health = value;
+        }
+    }
 
     // Network related.
     Input input;
-    bool isRegistered = false;
+    GameManager gameManager = null;
 
     // Gameplay related.
+    const int DEFAULT_HEALTH = 3;
     float reloadingTimer = 0;
-    int health = 0;
+    int _health = 0;
     #endregion
 
     #region Inherited
     // Monobehaviour inherited.
     private void Start()
     {
-        health = defaultHealth;
+        _health = DEFAULT_HEALTH;
+        gameManager = GameManager.GetGM();
+        gameManager.RegisterPlayer(this);
+        reloadSoundDuration = reloadDone.length;
     }
     private void OnGUI()
     {
-        DisplayDebugData();
+        if (entity.HasControl)
+        {
+            // Display kill to death ratio.
+            GUILayout.Label(Health.ToString());
+        }
     }
     private void Update()
     {
-        if (!isRegistered)
+        if (!playingReloadSound)
         {
-            if (GameManager.Instance)
+            if (reloadingTimer - reloadSoundDuration < 0.05f)
             {
-                GameManager.Instance.RegisterPlayer(this);
+                audioSource.PlayOneShot(reloadDone, 0.5f);
+                playingReloadSound = true;
             }
         }
     }
@@ -79,27 +131,29 @@ public class PlayerController : EntityEventListener<IPlayerState>
     public override void ControlGained()
     {
         SetupCamera();
+        isLocalPlayer = true;
     }
     public override void OnEvent(DamagePlayer evnt)
     {
-        DmgPlayer(evnt.Target);
+        gameManager.BroadcastDamagePlayerEvent(evnt.Target.NetworkId);
     }
     public override void SimulateController()
     {
         UpdateInputs();
 
         // Queue inputs.
-        var cmd = MoveCommand.Create();
+        var cmd = PlayerCommand.Create();
         cmd.MouseX = input.mouseX;
         cmd.Left = input.left;
         cmd.Up = input.up;
         cmd.Right = input.right;
         cmd.Down = input.down;
+        cmd.Firing = input.firing;
         entity.QueueInput(cmd);
     }
     public override void ExecuteCommand(Command command, bool resetState)
     {
-        MoveCommand cmd = command as MoveCommand;
+        PlayerCommand cmd = command as PlayerCommand;
 
         // Process command.
         if (resetState) // Reset internal state order received from owner. (Note: unnecessary? resetState is for internal state, PlayerState is force updated?)
@@ -110,7 +164,7 @@ public class PlayerController : EntityEventListener<IPlayerState>
         {
             if (cmd.IsFirstExecution) // Ran once at the start of every frame.
             {
-                if (IsAlive)
+                if (Health > 0) // Is alive.
                 {
                     Move();
                     Rotate();
@@ -123,13 +177,14 @@ public class PlayerController : EntityEventListener<IPlayerState>
                 else // Respawn.
                 {
                     // Note: it is executed once at the start of frame, meaning upon respawning, the rollback will apply previous inputs?
-                    SetTransformValues(GameManager.Instance.FindRespawnPoint(this).transform.position, Quaternion.identity);
+                    Health = DEFAULT_HEALTH;
+                    SetTransformValues(gameManager.FindRespawnPosition(this), Quaternion.identity);
                     cmd.Result.Position = transform.position;
                 }
             }
             else // Subsequent executions for rollback only.
             {
-                if (IsAlive)
+                if (Health > 0)
                 {
                     Move();
                     Rotate();
@@ -143,6 +198,15 @@ public class PlayerController : EntityEventListener<IPlayerState>
     #endregion
 
     // Public methods.
+    public void DmgPlayer(NetworkId target)
+    {
+        audioSource.PlayOneShot(shot, 0.5f);
+
+        if (entity.NetworkId == target)
+        {
+            Health--;
+        }
+    }
 
     // Private methods.
     void UpdateInputs()
@@ -163,25 +227,8 @@ public class PlayerController : EntityEventListener<IPlayerState>
         cameraTransform.SetPositionAndRotation(transform.position + transform.up, transform.rotation);
         cameraTransform.SetParent(transform);
         cameraTransform.gameObject.GetComponent<Camera>().fieldOfView = fieldOfView;
-    }
-    void DmgPlayer(BoltEntity targetEntity)
-    {
-        BoltLog.Info("My entity is: " + entity.ToString() + "; Target is: " + targetEntity.ToString());
 
-        if (entity == targetEntity)
-        {
-            BoltLog.Info(entity.NetworkId + ": Damaging self.");
-            health--;
-            BoltLog.Info(entity.NetworkId + ": Health updated: " + health.ToString());
-        }
-    }
-    void DisplayDebugData()
-    {
-        if (entity.IsControlled)
-        {
-            GUILayout.Label("Health: " + health.ToString());
-            GUILayout.Label("ShootingCD: " + reloadingTimer);
-        }
+        screenOverlay = cameraTransform.gameObject.GetComponentInChildren<RawImage>();
     }
     void SetTransformValues(Vector3 position, Quaternion rotation)
     {
@@ -212,22 +259,27 @@ public class PlayerController : EntityEventListener<IPlayerState>
 
         if (input.firing && reloadingTimer < 0)
         {
+            // Start reloading sound timer.
+            playingReloadSound = false;
+
+            // Draw ray.
+            BoltNetwork.Instantiate(BoltPrefabs.Ray, transform.position, transform.rotation);
+
             // Reset shooting cooldown.
             reloadingTimer = shotCooldown;
+
+            // Perform raycast and dispatch DamagePlayer event.
+
+            // BUG: raycast locally first to check against pillars.
+            // TODO
 
             using (var hits = BoltNetwork.RaycastAll(new Ray(entity.transform.position + entity.transform.forward, entity.transform.forward), serverFrame))
             {
                 if (hits.count > 0)
                 {
-                    DamagePlayer damageEvnt = DamagePlayer.Create(GlobalTargets.Everyone);
+                    DamagePlayer damageEvnt = DamagePlayer.Create(entity, EntityTargets.Everyone);
                     damageEvnt.Target = hits.GetHit(0).body.GetComponent<BoltEntity>();
-                    BoltLog.Info("Sending damage event with target: " + damageEvnt.Target.ToString());
-                    damageEvnt.Send(); // Problem: Sends this only to the copies of THIS entity, not other PlayerControllers....
-                    // Sln: make THIS entity across all machines damage the defined entity.
-                }
-                else
-                {
-                    BoltLog.Info("Missed");
+                    damageEvnt.Send();
                 }
             }
         }

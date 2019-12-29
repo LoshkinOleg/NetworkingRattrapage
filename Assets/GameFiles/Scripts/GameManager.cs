@@ -1,22 +1,39 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
+using Bolt;
 
 public class GameManager : MonoBehaviour
 {
-    // Public properties.
-    public static GameManager Instance = instance;
-    static GameManager instance = null;
-
-    // Serialize fields.
-    [SerializeField] List<SpawnPoint> spawnPoints = new List<SpawnPoint>();
-
     // Private fields.
     List<PlayerController> players = new List<PlayerController>();
+    List<SpawnPoint> spawnPoints = new List<SpawnPoint>();
 
     // Public methods.
-    public SpawnPoint FindRespawnPoint(PlayerController caller)
+    public static GameManager GetGM()
     {
+        foreach (var item in SceneManager.GetActiveScene().GetRootGameObjects())
+        {
+            if (item.tag == "GameController")
+            {
+                return item.GetComponent<GameManager>();
+            }
+        }
+
+        Debug.LogError("GM not found!");
+        return null;
+    }
+    public void RegisterSpawnPoint(SpawnPoint caller)
+    {
+        spawnPoints.Add(caller);
+    }
+    public void RegisterPlayer(PlayerController caller)
+    {
+        players.Add(caller);
+    }
+    public Vector3 FindRespawnPosition(PlayerController caller)
+    {
+        // Calculate average enemy position.
         Vector3 averagePlayersPos = Vector3.zero;
         foreach (var player in players)
         {
@@ -27,6 +44,7 @@ public class GameManager : MonoBehaviour
         }
         averagePlayersPos /= players.Count - 1;
 
+        // Find the respawn point furthest away from the average enemy position.
         List<KeyValuePair<SpawnPoint, Vector3>> pairs = new List<KeyValuePair<SpawnPoint, Vector3>>();
         foreach (var spawnPoint in spawnPoints)
         {
@@ -34,21 +52,14 @@ public class GameManager : MonoBehaviour
         }
         pairs.Sort((x, y) => x.Value.magnitude.CompareTo(y.Value.magnitude));
 
-        return pairs[0].Key;
+        // And return it.
+        return pairs[pairs.Count - 1].Key.transform.position;
     }
-    public void RegisterPlayer(PlayerController caller)
+    public void BroadcastDamagePlayerEvent(NetworkId target)
     {
-        players.Add(caller);
-    }
-    public void RegisterSpawnPoint(SpawnPoint caller)
-    {
-        spawnPoints.Add(caller);
-    }
-
-    // Monobehaviour inherited.
-    private void Awake()
-    {
-        Debug.Assert(!instance);
-        instance = this;
+        foreach (var player in players)
+        {
+            player.DmgPlayer(target);
+        }
     }
 }
