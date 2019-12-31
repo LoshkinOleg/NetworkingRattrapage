@@ -1,0 +1,36 @@
+\documentclass[10pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{graphicx}
+
+\graphicspath{ {./images/} }
+\author{Oleg Loshkin}
+\title{Simple Online FPS}
+
+\begin{document}
+
+\maketitle
+
+\section{Introduction}
+This game is the result of the SAE's repeat session for the GPR5100 Game Networking module. The aim of this project was to make a simple but functional online game using Unity and a networking technology of our choice.
+
+\section{Gameplay}
+
+
+\section{Technilogies used}
+\begin{itemize}
+\item Unity 2018.4.9f1:\\
+Latest available LTS version of Unity available at the time the project had started.
+\item Photon Bolt:\\
+High level game networking API for Unity. The API provides some features that match perfectly the requirements of an online FPS, namely lag compensating hitboxes and raycasting which negates the need to implement this complex feature manually.
+\item Github:\\
+Github was used for versioning. The project's repository is available here: https://github.com/LoshkinOleg/NetworkingRattrapage .\\
+The repository was temporarely split between two branches mid project to explore a possible migration to Photon Pun. This idea was abandonned and the resulting game was implemented using Photon Bolt.
+\end{itemize}
+
+\section{Summary}
+
+\end{document}
