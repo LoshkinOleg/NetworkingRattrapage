@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.20 (MiKTeX 2.9.7250 64-bit) (preloaded format=pdflatex 2019.11.24)  31 DEC 2019 18:19
+This is pdfTeX, Version 3.14159265-2.6-1.40.20 (MiKTeX 2.9.7250 64-bit) (preloaded format=pdflatex 2019.11.24)  15 JAN 2020 07:59
 entering extended mode
 **./SimpleOnlineFPS_TechnicalDocument_OlegLoshkin.tex
 (SimpleOnlineFPS_TechnicalDocument_OlegLoshkin.tex
@@ -413,7 +413,7 @@ File: omscmr.fd 2014/09/29 v2.5h Standard LaTeX font definitions
 )
 LaTeX Font Info:    Font shape `OMS/cmr/m/n' in size <12> not available
 (Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 30.
-<./images/gameplay.png, id=40, 649.67719pt x 486.31688pt>
+<./images/gameplay.png, id=48, 649.67719pt x 486.31688pt>
 File: ./images/gameplay.png Graphic file (type png)
 <use ./images/gameplay.png>
 Package pdftex.def Info: ./images/gameplay.png  used on input line 41.
@@ -432,69 +432,75 @@ Underfull \hbox (badness 10000) in paragraph at lines 65--67
  []
 
 [3]
-<./images/lobby.png, id=60, 1299.35437pt x 486.31688pt>
+<./images/lobby.png, id=68, 1299.35437pt x 486.31688pt>
 File: ./images/lobby.png Graphic file (type png)
 <use ./images/lobby.png>
 Package pdftex.def Info: ./images/lobby.png  used on input line 74.
 (pdftex.def)             Requested size: 519.73254pt x 194.5233pt.
 
-Underfull \hbox (badness 10000) in paragraph at lines 76--82
+Underfull \hbox (badness 10000) in paragraph at lines 76--83
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 76--82
+Underfull \hbox (badness 10000) in paragraph at lines 76--83
 
  []
 
+<./images/NetworkingPackets.png, id=69, 505.13719pt x 230.36063pt>
+File: ./images/NetworkingPackets.png Graphic file (type png)
+<use ./images/NetworkingPackets.png>
+Package pdftex.def Info: ./images/NetworkingPackets.png  used on input line 92.
 
-Underfull \hbox (badness 10000) in paragraph at lines 76--82
-
- []
-
+(pdftex.def)             Requested size: 505.13596pt x 230.36005pt.
 [4 <./images/lobby.png>]
-Underfull \hbox (badness 10000) in paragraph at lines 101--108
+Underfull \hbox (badness 10000) in paragraph at lines 94--98
+
+ []
+
+<./images/statePacketOptimisation.png, id=75, 557.08125pt x 296.60812pt>
+File: ./images/statePacketOptimisation.png Graphic file (type png)
+<use ./images/statePacketOptimisation.png>
+Package pdftex.def Info: ./images/statePacketOptimisation.png  used on input li
+ne 99.
+(pdftex.def)             Requested size: 501.3685pt x 266.94484pt.
+[5 <./images/NetworkingPackets.png> <./images/statePacketOptimisation.png>]
+Underfull \hbox (badness 10000) in paragraph at lines 113--117
 
  []
 
 
-Overfull \hbox (1.27892pt too wide) in paragraph at lines 101--108
-\OT1/cmr/m/n/12 that seem-ingly came from the in-ter-ac-tion of Pho-ton Bolt wi
-th the en-gine (eg: GameOb-ject.FindGameOb 
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 101--108
+Underfull \hbox (badness 10000) in paragraph at lines 113--117
 
  []
 
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 109.
-[5]
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 109.
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 118.
+[6]
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 118.
  (SimpleOnlineFPS_TechnicalDocument_OlegLoshkin.aux)
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 109.
-Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 109.
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 118.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 118.
 Package rerunfilecheck Info: File `SimpleOnlineFPS_TechnicalDocument_OlegLoshki
 n.out' has not changed.
-(rerunfilecheck)             Checksum: 310ADED075E1400E293D67F2C4329252;413.
-Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 109.
+(rerunfilecheck)             Checksum: 4A92CAFF94584AABEEB6C294FB13B888;521.
+Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 118.
  ) 
 Here is how much of TeX's memory you used:
- 6802 strings out of 492450
- 98742 string characters out of 3129748
- 193045 words of memory out of 3000000
- 11040 multiletter control sequences out of 15000+200000
+ 6821 strings out of 492450
+ 99238 string characters out of 3129748
+ 192046 words of memory out of 3000000
+ 11056 multiletter control sequences out of 15000+200000
  8006 words of font info for 31 fonts, out of 3000000 for 9000
  1141 hyphenation exceptions out of 8191
- 39i,6n,34p,446b,385s stack positions out of 5000i,500n,10000p,200000b,50000s
+ 39i,6n,34p,496b,385s stack positions out of 5000i,500n,10000p,200000b,50000s
 <C:/Program Files/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmbx12.pfb><C:/Pr
 ogram Files/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmr12.pfb><C:/Program Fil
 es/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmr17.pfb><C:/Program Files/MiKTeX
  2.9/fonts/type1/public/amsfonts/cm/cmsy10.pfb>
-Output written on SimpleOnlineFPS_TechnicalDocument_OlegLoshkin.pdf (5 pages, 3
-30078 bytes).
+Output written on SimpleOnlineFPS_TechnicalDocument_OlegLoshkin.pdf (6 pages, 3
+92255 bytes).
 PDF statistics:
- 89 PDF objects out of 1000 (max. 8388607)
- 15 named destinations out of 1000 (max. 500000)
- 83 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 105 PDF objects out of 1000 (max. 8388607)
+ 18 named destinations out of 1000 (max. 500000)
+ 109 words of extra memory for PDF output out of 10000 (max. 10000000)
 

@@ -74,36 +74,45 @@ Implementation of hitscanning was surprisingly easy using \textbf{Photon Bolt's 
 \includegraphics[scale=0.4]{lobby}
 \end{center}
 The lobby is comprised of \textbf{two tabs}: a main one with two buttons for \textbf{creating a new session or to join a random one}, and \textbf{a tab for naming the new session before joining it}.\\
-A different lobby was originally planned, one that would display a list of all current game sessions in progress with their name, the number of players and whether or not they are protected by a password. This could not be implemented for the following reasons:\\\\
-Photon Bolt provides a static property under "BoltNetwork.Sessions" to allow the program to retrieve all ongoing sessions. However, this list of sessions is unexplicablely always empty. The idea of displaying a list of ongoing sessions had therefore to be abandoned.\\
-Instead, Photon Bolt's BoltMatchmaking.JoinRandom() static method is used to join any ongoing game session, bypassing the sessions list completely and successfully finding any existing sessions.\\\\
-A password protection and maximal number of players per session limit was not implemented either: while the documentation of Photon Bolt goes to length about the usage of it's BoltMatchmaking utility class, it does not provide any concrete examples of implementations of password protection and the documentation does not provide any explicit enough ways to handle session customization.\\\\
-For these reasons, the lobby is as minimalistic as it is.
+\textbf{A different lobby was originally planned}, \textbf{one that would display a list of all current game sessions} in progress with their name, \textbf{the number of players} and whether or not they are \textbf{protected by a password}. \textbf{This could not be implemented for the following reasons:}\\\\
+Photon \textbf{Bolt provides a static property under "BoltNetwork.Sessions"} to allow the program to retrieve all ongoing sessions. \textbf{However, this list of sessions is unexplicablely always empty}, even for sample projects provided by Bolt. Even after much effort trying to resolve this bug, \textbf{no way was found to fix it}, the idea of \textbf{displaying a list of ongoing sessions had therefore to be abandoned}.\\
+\textbf{Instead}, Photon Bolt's \textbf{BoltMatchmaking.JoinRandom()} static method \textbf{is used to join any ongoing game session, bypassing the sessions list completely} and successfully joining any existing sessions.\\
+\textbf{Since there is no way to retrieve a list} of any ongoing sessions to check if any exist, \textbf{clicking the "Join Random" button} in the UI when there are \textbf{no sessions running}, \textbf{locks the player indefinitely in a connecting state} and the player has to restart the program to exit it.\\
+A\textbf{ password protection and maximal number of players per session} limit was \textbf{not implemented} either \textbf{due to the same bug}: there is \textbf{no way to retrieve any data about the session} if the session list is never updated.\\\\
+\textbf{For these reasons, the lobby is as minimalistic as it is.}
 
-\section{Feedback}
-Feedbacks for the gameplay have been implemented using \textbf{Photon Bolt's Events}. This allows the various feedbacks to be played on the programs of all players in a session when needed.\\
-Albeit functional, these are still bug prone due to my lack of understanding of the Photon Bolt's API and the way it handles event sending and reception depending on the various confusing configurations that can be used.
+\section{Gameplay Feedbacks}
+Feedbacks for the gameplay have been implemented using \textbf{Photon Bolt's Events}. This allows the various feedbacks to be played on the clients of all players in a session when needed.
+
+\section{Bot Behaviour}
+A player can \textbf{press the "1" key} on the keyboard to \textbf{enable/disable a simple automatic back and forth movement}. This may be used to test latency / lag compensation.
+
+\section{The Packets}
+\begin{center}
+\includegraphics[scale=1.0]{NetworkingPackets}
+\end{center}
+Photon \textbf{Bolt sends and receives merged UDP packets} at a fixed rate defined in the framework's settings. For this game, it sends \textbf{25 UDP packets / second.}\\
+The \textbf{packet's size varies between ~60 to 200 bytes} in total. The \textbf{ports used} for these packets are in the range of \textbf{5055 to 27002}.\\\\
+The \textbf{traffic is minimized by sending only the relevant data} which is defined via the Photon Bolt's State editor. \textbf{In the example below}, you can see that \textbf{only the value of relevant axes are sent} over the network for the position and rotation of the PlayerState for instance.\\
+\textbf{Moreover, Photon Bolt sends these values only if they have changed}, further reducing the packet's size if no changes were made to the PlayerState between two game frames.
+\begin{center}
+\includegraphics[scale=0.9]{statePacketOptimisation}
+\end{center}
+
+\newpage
 
 \section{Potential Improvements}
 \begin{itemize}
-\item Clicking "Join Random" in the lobby without any running sessions locks the client into an indefinite state where they can't do anything and that they cannot escape without restarting the game. This is due to the bug described in the Lobby section that prevents the implementation of a check to verify the non existence of any sessions.
-\item The visual aspect of the game was completely neglected. Any assetwork would improve the player's experience.
-\item While the player can name a session when creating one, due to the above mentioned "BoltNetwork.Sessions" bug, no session list are displayed in the lobby and the name given by the player upon session creation is not used in any way.
-\item There are no kill to death ratio counters.
-\item The game does not perform any checks to verify that the session in progress is not playable (eg: less than 2 players in session).
-\item Sessions cannot currently be protected by a password.
-\item The host cannot define a limit on the number of players allowed in a session.
-\item Bots for testing the game's reaction to lag would have been a good addition to the project (eg. zigzagging, peeking from around corner, etc.).
-\item Having more than two players in a session creates auditive bugs due to the way network events are handled.
+\item \textbf{Clicking "Join Random" in the lobby without any running sessions locks the client into an indefinite state} where they can't do anything and that they cannot escape without restarting the game. This is due to the bug described in the Lobby section that prevents the implementation of a check to verify the non existence of any sessions.
+\item \textbf{While the player can name a session when creating one}, due to the above mentioned "BoltNetwork.Sessions" bug, no session list are displayed in the lobby and the name given by the player upon session creation \textbf{is not used} in any way.
+\item Sessions cannot currently be protected by a password due to the "BoltNetwork.Sessions" bug.
+\item In approaching the architecture of the program, I failed to consider the complexity that a multiplayer game implies. Therefore, while the \textbf{current architecture} gets the job done, it \textbf{would certainly benefit from some serious refactoring} to make it more granular, meaning to make the program very explicitly take into account that each player has their own worlds and that these need to be synchronized.
 \end{itemize}
 
 \section{Summary}
-\textbf{The game fulfils it's basic ambitions}: \textbf{it is a barebone online FPS that successfully synchronizes players and performs hitscans for firing.}\\\\
-Photon Bolt has proven very difficult to work with. Each new feature, however simple and small it may be required hours of debugging.\\
-During the development, I've encountered bugs due to possibly inner workings of the API that rendered impossible the implementation of some key features, and weirder still, bugs coming from Unity's side that seemingly came from the interaction of Photon Bolt with the engine (eg: GameObject.FindGameOb\\jectWithTag() breaking).\\
-All these holdbacks made me consider switching networking platforms but doing so would have meant discarding much of the work I had done up to that point.\\
-Despite a somewhat complete documentation provided by Photon Bolt, I've found myself needing more to investigate these strange bugs but could not find any.\\
-Moreover, I was unable to get help to overcome these issues due to my choice of Photon Bolt as the networking technology, my colleagues having picked different ones for their projects and the senior students and teachers being unfamiliar with the API.\\\\
-Due to all of this, \textbf{the game's current status is lacking in both features and polish} and I am left to wonder how much of the problems encountered have it's origin in my own abilities and how much in the framework's choice.
+\textbf{The game fulfils it's basic ambitions}: \textbf{it is a barebone online FPS that successfully synchronizes players, performs hitscans for firing and triggers the appropriate gameplay feedbacks across the clients of all players.}\\\\
+Photon Bolt has proven to be a difficult framework to work with. While it does provide some very useful features like the the synchronized hitboxes, it's transparency both in the code and in it's documentation makes debugging very difficult or even impossible like is the case with the "BoltNetwork.Sessions" list bug.\\
+As a result, much of the time that has been allocated to this project was spent trying to solve unexplicable bugs or finding workarounds instead of expanding the features of the game, and some crucial features were outright impossible to implement.\\\\
+\textbf{In conclusion, I am quite satisfied with the end result, as meagre it may appear.} During this project I've acquired the experience of working with a rather uncooperative framework, implementing the rather complex task of a responsive real-time online game, while tackling the problems encountered in a way to still provide a viable game at the end of the project.
 
 \end{document}
