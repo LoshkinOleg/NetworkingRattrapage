@@ -21,10 +21,12 @@ public class PlayerController : EntityEventListener<IPlayerState>
     [SerializeField] [Range(0.0f, 180.0f)] float fieldOfView = 90.0f;
     [SerializeField] [Range(0.0f, float.MaxValue)] float shotCooldown = 2.0f;
 
-    // Player camera to instanciate.
+    // Prefabs.
     [SerializeField] GameObject cameraPrefab = null;
+    [SerializeField] GameObject rayPrefab = null;
 
     // Sounds.
+    [SerializeField] AudioClip shot = null;
     [SerializeField] AudioClip hurt = null;
     [SerializeField] AudioClip reloadDone = null;
     [SerializeField] AudioClip ding = null;
@@ -48,16 +50,6 @@ public class PlayerController : EntityEventListener<IPlayerState>
         {
             if (_health > value) // Damaging the player.
             {
-                // Play hurt sound.
-                if (isLocalPlayer)
-                {
-                    audioSource.PlayOneShot(hurt, 1.0f);
-                }
-                else
-                {
-                    audioSource.PlayOneShot(ding, 1.0f);
-                }
-
                 // Highlight screen in appropriate color.
                 if (isLocalPlayer)
                 {
@@ -85,11 +77,19 @@ public class PlayerController : EntityEventListener<IPlayerState>
     // Network related.
     Input input;
     GameManager gameManager = null;
+    EventRelayer evntRelayer = null;
 
     // Gameplay related.
     const int DEFAULT_HEALTH = 3;
     float reloadingTimer = 0;
     int _health = 0;
+    int killCount = 0;
+    int deathCount = 0;
+
+    // Bot related.
+    bool runBackAndForth = false;
+    float backAndForthTimer = 0.0f;
+    float backAndForthTimerDefaultValue = 1.0f;
     #endregion
 
     #region Inherited
@@ -97,8 +97,9 @@ public class PlayerController : EntityEventListener<IPlayerState>
     private void Start()
     {
         _health = DEFAULT_HEALTH;
-        gameManager = GameManager.GetGM();
+        gameManager = GameManager.Get();
         gameManager.RegisterPlayer(this);
+        evntRelayer = EventRelayer.Get();
         reloadSoundDuration = reloadDone.length;
     }
     private void Update()
@@ -110,6 +111,22 @@ public class PlayerController : EntityEventListener<IPlayerState>
                 audioSource.PlayOneShot(reloadDone, 0.5f);
                 playingReloadSound = true;
             }
+        }
+
+        if (runBackAndForth)
+        {
+            backAndForthTimer -= Time.deltaTime;
+            if (backAndForthTimer < -backAndForthTimerDefaultValue)
+            {
+                backAndForthTimer = backAndForthTimerDefaultValue;
+            }
+        }
+    }
+    private void OnGUI()
+    {
+        if (entity.HasControl)
+        {
+            GUILayout.Label("Kills: " + killCount + "; Deaths: " + deathCount);
         }
     }
 
@@ -159,7 +176,7 @@ public class PlayerController : EntityEventListener<IPlayerState>
                     cmd.Result.Position = transform.position;
                     cmd.Result.Rotation = transform.rotation;
 
-                    Shoot(cmd.ServerFrame);
+                    Shoot();
                 }
                 else // Respawn.
                 {
@@ -185,26 +202,109 @@ public class PlayerController : EntityEventListener<IPlayerState>
     #endregion
 
     // Public methods.
-    public void ApplyDamage(DamagePlayer evnt)
+    public void ProcessEvent(Bolt.Event evnt, EventType type)
     {
-        if (entity == evnt.Target)
+        switch (type)
         {
-            --Health;
+            case EventType.SHOT:
+                {
+                    ShotEvent shotEvnt = evnt as ShotEvent;
+                    audioSource.PlayOneShot(shot);
+
+                    if (shotEvnt.Shooter == entity)
+                    {
+                        if (entity.HasControl)
+                        {
+                            // Perform raycast and dispatch DamagePlayer event.
+                            RaycastHit hit;
+                            if (Physics.Raycast(new Ray(entity.transform.position + entity.transform.forward, entity.transform.forward), out hit, 100))
+                            {
+                                if (hit.transform.tag == "Player")
+                                {
+                                    using (var hits = BoltNetwork.RaycastAll(new Ray(entity.transform.position + entity.transform.forward, entity.transform.forward), BoltNetwork.ServerFrame))
+                                    {
+                                        if (hits.count > 0)
+                                        {
+                                            // Send damage event with this entity as Sender and hit target as Target entity.
+                                            evntRelayer.Send(EventType.DAMAGE, entity, hits[0].body.gameObject.GetComponent<BoltEntity>());
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        // Instanciate a visual ray.
+                        Instantiate(rayPrefab, transform.position, transform.rotation);
+                    }
+                }
+                break;
+            case EventType.DAMAGE:
+                {
+                    DamageEvent damageEvnt = evnt as DamageEvent;
+                    if (entity.HasControl)
+                    {
+                        if (damageEvnt.Target == entity)
+                        {
+                            audioSource.Stop();
+                            audioSource.PlayOneShot(hurt);
+                            TakeDamage(damageEvnt.Sender);
+                        }
+                        else if (damageEvnt.Sender == entity)
+                        {
+                            audioSource.PlayOneShot(ding);
+                        }
+                    }
+                }
+                break;
+            case EventType.KILL:
+                {
+                    KillEvent killEvnt = evnt as KillEvent;
+                    if (killEvnt.Killer == entity)
+                    {
+                        killCount++;
+                    }
+                }
+                break;
         }
     }
 
     // Private methods.
+    void TakeDamage(BoltEntity shooter)
+    {
+        if (--Health < 1)
+        {
+            evntRelayer.Send(EventType.KILL, shooter);
+            deathCount++;
+        }
+    }
     void UpdateInputs()
     {
-        var horizontal = UnityEngine.Input.GetAxisRaw("Horizontal");
-        var vertical = UnityEngine.Input.GetAxisRaw("Vertical");
+        if (runBackAndForth)
+        {
+            input.mouseX = 0.0f;
+            input.left = false;
+            input.right = false;
+            input.up = backAndForthTimer > 0.0f ? true : false;
+            input.down = backAndForthTimer > 0.0f ? false : true;
+            input.firing = false;
+        }
+        else
+        {
+            var horizontal = UnityEngine.Input.GetAxisRaw("Horizontal");
+            var vertical = UnityEngine.Input.GetAxisRaw("Vertical");
 
-        input.mouseX = UnityEngine.Input.GetAxisRaw("Mouse X");
-        input.left = horizontal < 0.0f;
-        input.up = vertical > 0.0f;
-        input.right = horizontal > 0.0f;
-        input.down = vertical < 0.0f;
-        input.firing = UnityEngine.Input.GetButtonDown("Fire1");
+            input.mouseX = UnityEngine.Input.GetAxisRaw("Mouse X");
+            input.left = horizontal < 0.0f;
+            input.up = vertical > 0.0f;
+            input.right = horizontal > 0.0f;
+            input.down = vertical < 0.0f;
+            input.firing = UnityEngine.Input.GetButtonDown("Fire1");
+
+        }
+
+        if (UnityEngine.Input.GetKeyDown(KeyCode.Alpha1))
+        {
+            runBackAndForth = !runBackAndForth;
+        }
     }
     void SetupCamera()
     {
@@ -238,39 +338,20 @@ public class PlayerController : EntityEventListener<IPlayerState>
     {
         entity.transform.rotation *= Quaternion.Euler(0, input.mouseX * mouseSensitivity, 0);
     }
-    void Shoot(int serverFrame)
+    void Shoot()
     {
         reloadingTimer -= BoltNetwork.FrameDeltaTime;
 
         if (input.firing && reloadingTimer < 0)
         {
-            // Instanciate ray visual.
-            BoltNetwork.Instantiate(BoltPrefabs.Ray, transform.position, transform.rotation);
+            // Send shot event.
+            evntRelayer.Send(EventType.SHOT, entity);
 
             // Start reloading sound timer.
             playingReloadSound = false;
 
             // Reset shooting cooldown.
             reloadingTimer = shotCooldown;
-
-            // Perform raycast and dispatch DamagePlayer event.
-            RaycastHit hit;
-            if (Physics.Raycast(new Ray(entity.transform.position + entity.transform.forward, entity.transform.forward), out hit, 100))
-            {
-                if (hit.transform.tag == "Player")
-                {
-                    using (var hits = BoltNetwork.RaycastAll(new Ray(entity.transform.position + entity.transform.forward, entity.transform.forward), serverFrame))
-                    {
-                        if (hits.count > 0)
-                        {
-                            DamagePlayer damageEvnt = DamagePlayer.Create(GlobalTargets.Everyone);
-                            damageEvnt.Target = hits.GetHit(0).body.GetComponent<BoltEntity>();
-                            damageEvnt.Sender = entity;
-                            damageEvnt.Send();
-                        }
-                    }
-                }
-            }
         }
     }
 }

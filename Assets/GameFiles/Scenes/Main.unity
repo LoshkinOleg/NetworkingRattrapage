@@ -1905,6 +1905,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1672184189}
   - component: {fileID: 1672184190}
+  - component: {fileID: 1672184191}
   m_Layer: 0
   m_Name: Level
   m_TagString: GameController
@@ -1939,6 +1940,18 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e7cf78650c7c37a42a2bdb123a7eeff2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &1672184191
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1672184188}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c2d025a973dcea845ae56373f7dec263, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!1 &1865700989

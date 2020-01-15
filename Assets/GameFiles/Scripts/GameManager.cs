@@ -8,9 +8,16 @@ public class GameManager : GlobalEventListener
     // Private fields.
     List<PlayerController> players = new List<PlayerController>();
     List<SpawnPoint> spawnPoints = new List<SpawnPoint>();
+    EventRelayer evntRelayer = null;
+
+    // Inherited.
+    private void Awake()
+    {
+        evntRelayer = GetComponent<EventRelayer>();
+    }
 
     // Public methods.
-    public static GameManager GetGM()
+    public static GameManager Get()
     {
         foreach (var item in SceneManager.GetActiveScene().GetRootGameObjects())
         {
@@ -30,6 +37,7 @@ public class GameManager : GlobalEventListener
     public void RegisterPlayer(PlayerController caller)
     {
         players.Add(caller);
+        evntRelayer.SetPlayers(players.ToArray());
     }
     public Vector3 FindRespawnPosition(PlayerController caller)
     {
@@ -61,14 +69,6 @@ public class GameManager : GlobalEventListener
         if (scene == "Main")
         {
             BoltNetwork.Instantiate(BoltPrefabs.Player, Vector3.up, Quaternion.identity).TakeControl();
-        }
-    }
-
-    public override void OnEvent(DamagePlayer evnt)
-    {
-        foreach (var item in players)
-        {
-            item.ApplyDamage(evnt);
         }
     }
 }

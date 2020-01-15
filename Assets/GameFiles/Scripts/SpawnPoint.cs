@@ -9,7 +9,7 @@ public class SpawnPoint : MonoBehaviour
         if (!isRegistered)
         {
             isRegistered = true;
-            GameManager.GetGM().RegisterSpawnPoint(this);
+            GameManager.Get().RegisterSpawnPoint(this);
         }
     }
 }
