@@ -62,8 +62,8 @@ MonoBehaviour:
   showBoltEntityHints: 0
   serializeProjectAsText: 0
   photonAppId: 3683c07f-5a76-40c3-8a35-48bd468ae8d9
-  photonUsePunch: 0
-  photonCloudRegionIndex: 5
+  photonUsePunch: 1
+  photonCloudRegionIndex: 0
   instantiateMode: 0
   globalEntityBehaviourQueryOption: 3
   globalEntityPriorityCalculatorQueryOption: 3

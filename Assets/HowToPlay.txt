@@ -1,0 +1,6 @@
+1) Start an instance of the game.
+2) Create a new session on it.
+3) Start a second instance of the game.
+4) Join random session.
+
+NOTE: Joining random session before there is one will result in the game instance being stuck in a lobby.
